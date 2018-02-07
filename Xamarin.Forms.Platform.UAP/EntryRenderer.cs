@@ -44,6 +44,7 @@ namespace Xamarin.Forms.Platform.UWP
 				UpdateInputScope();
 				UpdateAlignment();
 				UpdatePlaceholderColor();
+				UpdateAutoCapitalization();
 			}
 		}
 
@@ -72,6 +73,8 @@ namespace Xamarin.Forms.Platform.UWP
 				UpdateTextColor();
 			else if (e.PropertyName == InputView.KeyboardProperty.PropertyName)
 				UpdateInputScope();
+			else if (e.PropertyName == InputView.AutoCapitalizationProperty.PropertyName)
+				UpdateAutoCapitalization();
 			else if (e.PropertyName == Entry.FontAttributesProperty.PropertyName)
 				UpdateFont();
 			else if (e.PropertyName == Entry.FontFamilyProperty.PropertyName)
@@ -101,7 +104,7 @@ namespace Xamarin.Forms.Platform.UWP
 		}
 
 		void OnNativeTextChanged(object sender, Windows.UI.Xaml.Controls.TextChangedEventArgs args)
-		{
+		{ 
 			Element.SetValueCore(Entry.TextProperty, Control.Text);
 		}
 
@@ -203,6 +206,21 @@ namespace Xamarin.Forms.Platform.UWP
 
 			BrushHelpers.UpdateColor(textColor, ref _defaultTextColorFocusBrush,
 				() => Control.ForegroundFocusBrush, brush => Control.ForegroundFocusBrush = brush);
+		}
+
+		void UpdateAutoCapitalization()
+		{
+			if (Element.IsSet(Xamarin.Forms.InputView.AutoCapitalizationProperty))
+			{
+				Control.AutoCapitalization = Element.AutoCapitalization;
+				switch (Element.AutoCapitalization)
+				{
+					case AutoCapitalization.Sentences:
+					case AutoCapitalization.Words:
+						Internals.Log.Warning(nameof(Entry), $"{Element.AutoCapitalization} is not supported on windows because they are controlled by Settings->Typing");
+						break;
+				}
+			}
 		}
 	}
 }

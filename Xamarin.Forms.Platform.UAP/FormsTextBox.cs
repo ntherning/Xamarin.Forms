@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Devices.Input;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -38,6 +40,10 @@ namespace Xamarin.Forms.Platform.UWP
 		public static readonly DependencyProperty IsPasswordProperty = DependencyProperty.Register(nameof(IsPassword), 
 			typeof(bool), typeof(FormsTextBox), new PropertyMetadata(default(bool), OnIsPasswordChanged));
 
+
+		public static readonly DependencyProperty AutoCapitalizationProperty = DependencyProperty.Register(nameof(AutoCapitalization),
+			typeof(AutoCapitalization), typeof(FormsTextBox), new PropertyMetadata(AutoCapitalization.None, OnAutoCapitalizationChanged));
+
 		public new static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text), 
 			typeof(string), typeof(FormsTextBox), new PropertyMetadata("", TextPropertyChanged));
 
@@ -53,9 +59,20 @@ namespace Xamarin.Forms.Platform.UWP
 		public FormsTextBox()
 		{
 			TextChanged += OnTextChanged;
+			TextChanging += OnTextChanging;
 			SelectionChanged += OnSelectionChanged;
 			IsEnabledChanged += OnIsEnabledChanged;
+
+			Window.Current.CoreWindow.KeyDown += (s, e) =>
+			{
+				var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control);
+				if (ctrl.HasFlag(CoreVirtualKeyStates.Down) && e.VirtualKey == VirtualKey.A)
+				{
+					// do your stuff
+				}
+			};
 		}
+
 
 		void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
 		{
@@ -78,6 +95,12 @@ namespace Xamarin.Forms.Platform.UWP
 		{
 			get { return (bool)GetValue(IsPasswordProperty); }
 			set { SetValue(IsPasswordProperty, value); }
+		}
+
+		public AutoCapitalization AutoCapitalization
+		{
+			get { return (AutoCapitalization)GetValue(AutoCapitalizationProperty); }
+			set { SetValue(AutoCapitalizationProperty, value); }
 		}
 
 		internal bool UseFormsVsm { get; set; }
@@ -233,11 +256,40 @@ namespace Xamarin.Forms.Platform.UWP
 			textBox.SyncBaseText();
 		}
 
+
+		private static void OnAutoCapitalizationChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{ 
+
+			var textBox = (FormsTextBox)dependencyObject;
+			/*switch (textBox.AutoCapitalization)
+			{
+				case AutoCapitalization.Characters:
+					textBox.CharacterCasing = Windows.UI.Xaml.Controls.CharacterCasing.Upper;
+					break;
+				case AutoCapitalization.Sentences:
+				case AutoCapitalization.Words:
+				case AutoCapitalization.None:
+					textBox.CharacterCasing = Windows.UI.Xaml.Controls.CharacterCasing.Normal;
+					break;
+
+			}*/
+
+			/*Windows.UI.ViewManagement.UIViewSettings.GetForCurrentView().UserInteractionMode
+
+			Windows.UI.ViewManagement.GetForCurrentView().Hiding
+				+= new EventHandler(_OnInputPaneHiding);*/
+
+			textBox.UpdateInputScope();
+			textBox.SyncBaseText();
+		}
+
 		void OnSelectionChanged(object sender, RoutedEventArgs routedEventArgs)
 		{
 			// Cache this value for later use as explained in OnKeyDown below
 			_cachedSelectionLength = SelectionLength;
 		}
+
+		
 
 		// Because the implementation of a password entry is based around inheriting from TextBox (via FormsTextBox), there
 		// are some inaccuracies in the behavior. OnKeyDown is what needs to be used for a workaround in this case because 
@@ -290,6 +342,30 @@ namespace Xamarin.Forms.Platform.UWP
 			}
 			else
 				base.OnKeyDown(e);
+		}
+
+		void OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+		{
+
+			TouchCapabilities touchCapabilities = new Windows.Devices.Input.TouchCapabilities();
+			var currentView = UIViewSettings.GetForCurrentView();
+			
+			if (AutoCapitalization == AutoCapitalization.Characters &&
+				currentView.UserInteractionMode == UserInteractionMode.Mouse)
+			{
+				if (SelectionStart == 0) { return; }
+				var lastLetter = base.Text[SelectionStart - 1];
+
+				if (Char.IsLetter(lastLetter) &&
+					Char.IsLower(lastLetter))
+				{
+					var letters = base.Text.ToCharArray();
+					letters[SelectionStart - 1] = char.ToUpper(lastLetter);
+					var saveSelectionSTart = SelectionStart;
+					base.Text = new string(letters);
+					SelectionStart = saveSelectionSTart;
+				}
+			}
 		}
 
 		void OnTextChanged(object sender, Windows.UI.Xaml.Controls.TextChangedEventArgs textChangedEventArgs)
@@ -364,7 +440,7 @@ namespace Xamarin.Forms.Platform.UWP
 				IsSpellCheckEnabled = false;
 			}
 			else
-			{
+			{ 
 				InputScope = _cachedInputScope;
 				IsSpellCheckEnabled = _cachedSpellCheckSetting;
 				IsTextPredictionEnabled = _cachedPredictionsSetting;

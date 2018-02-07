@@ -104,8 +104,9 @@ namespace Xamarin.Forms.Platform.iOS
 			UpdateKeyboard();
 			UpdateAlignment();
 			UpdateAdjustsFontSizeToFitWidth();
+			UpdateAutoCapitalization();
 		}
-
+		
 		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			if (e.PropertyName == Entry.PlaceholderProperty.PropertyName || e.PropertyName == Entry.PlaceholderColorProperty.PropertyName)
@@ -118,6 +119,8 @@ namespace Xamarin.Forms.Platform.iOS
 				UpdateColor();
 			else if (e.PropertyName == Xamarin.Forms.InputView.KeyboardProperty.PropertyName)
 				UpdateKeyboard();
+			else if (e.PropertyName == Xamarin.Forms.InputView.AutoCapitalizationProperty.PropertyName)
+				UpdateAutoCapitalization();
 			else if (e.PropertyName == Entry.HorizontalTextAlignmentProperty.PropertyName)
 				UpdateAlignment();
 			else if (e.PropertyName == Entry.FontAttributesProperty.PropertyName)
@@ -248,6 +251,32 @@ namespace Xamarin.Forms.Platform.iOS
 			// ReSharper disable once RedundantCheckBeforeAssignment
 			if (Control.Text != Element.Text)
 				Control.Text = Element.Text;
+		}
+
+
+		void UpdateAutoCapitalization()
+		{
+			if (Element.IsSet(Xamarin.Forms.InputView.AutoCapitalizationProperty))
+			{
+				var autoCap = (AutoCapitalization)Element.GetValue(Xamarin.Forms.InputView.AutoCapitalizationProperty);
+
+				switch (autoCap)
+				{
+					case AutoCapitalization.Characters:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.AllCharacters;
+						break;
+					case AutoCapitalization.Sentences:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.Sentences;
+						break;
+					case AutoCapitalization.Words:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.Words;
+						break;
+					case AutoCapitalization.None:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.None;
+						break;
+
+				}
+			}
 		}
 	}
 }

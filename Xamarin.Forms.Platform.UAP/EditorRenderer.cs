@@ -46,6 +46,7 @@ namespace Xamarin.Forms.Platform.UWP
 				UpdateFont();
 				UpdateTextAlignment();
 				UpdateFlowDirection();
+				UpdateAutoCapitalization();
 			}
 
 			base.OnElementChanged(e);
@@ -90,6 +91,10 @@ namespace Xamarin.Forms.Platform.UWP
 			{
 				UpdateTextAlignment();
 				UpdateFlowDirection();
+			}
+			else if (e.PropertyName == InputView.AutoCapitalizationProperty.PropertyName)
+			{
+				UpdateAutoCapitalization();
 			}
 		}
 
@@ -200,6 +205,21 @@ namespace Xamarin.Forms.Platform.UWP
 		void UpdateFlowDirection()
 		{
 			Control.UpdateFlowDirection(Element);
+		}
+
+		void UpdateAutoCapitalization()
+		{
+			if (Element.IsSet(Xamarin.Forms.InputView.AutoCapitalizationProperty))
+			{
+				Control.AutoCapitalization = Element.AutoCapitalization;
+				switch (Element.AutoCapitalization)
+				{
+					case AutoCapitalization.Sentences:
+					case AutoCapitalization.Words:
+						Internals.Log.Warning(nameof(Entry), $"{Element.AutoCapitalization} is not supported on windows because they are controlled by Settings->Typing");
+						break;
+				}
+			}
 		}
 	}
 }

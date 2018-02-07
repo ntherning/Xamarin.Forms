@@ -140,6 +140,8 @@ namespace Xamarin.Forms.Platform.Android
 				UpdateColor();
 			else if (e.PropertyName == InputView.KeyboardProperty.PropertyName)
 				UpdateInputType();
+			else if (e.PropertyName == InputView.AutoCapitalizationProperty.PropertyName)
+				UpdateInputType();
 			else if (e.PropertyName == Entry.HorizontalTextAlignmentProperty.PropertyName)
 				UpdateAlignment();
 			else if (e.PropertyName == Entry.FontAttributesProperty.PropertyName)
@@ -191,11 +193,30 @@ namespace Xamarin.Forms.Platform.Android
 			{
 				Control.KeyListener = GetDigitsKeyListener(Control.InputType);
 			}
-
+			 
 			if (model.IsPassword && ((Control.InputType & InputTypes.ClassText) == InputTypes.ClassText))
 				Control.InputType = Control.InputType | InputTypes.TextVariationPassword;
 			if (model.IsPassword && ((Control.InputType & InputTypes.ClassNumber) == InputTypes.ClassNumber))
 				Control.InputType = Control.InputType | InputTypes.NumberVariationPassword;
+			
+			if(model.IsSet(InputView.AutoCapitalizationProperty))
+			{
+				var autoCap = (AutoCapitalization)model.GetValue(InputView.AutoCapitalizationProperty);
+
+				switch (autoCap)
+				{
+					case AutoCapitalization.Characters:
+						Control.InputType = Control.InputType | InputTypes.TextFlagCapCharacters;
+						break; 
+					case AutoCapitalization.Sentences:
+						Control.InputType = Control.InputType | InputTypes.TextFlagCapSentences;
+						break;
+					case AutoCapitalization.Words:
+						Control.InputType = Control.InputType | InputTypes.TextFlagCapWords;
+						break;
+							
+				}
+			}
 		}
 
 		void UpdatePlaceholderColor()

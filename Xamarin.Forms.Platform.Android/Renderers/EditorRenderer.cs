@@ -90,6 +90,8 @@ namespace Xamarin.Forms.Platform.Android
 				UpdateText();
 			else if (e.PropertyName == InputView.KeyboardProperty.PropertyName)
 				UpdateInputType();
+			else if (e.PropertyName == InputView.AutoCapitalizationProperty.PropertyName)
+				UpdateInputType();
 			else if (e.PropertyName == Editor.TextColorProperty.PropertyName)
 				UpdateTextColor();
 			else if (e.PropertyName == Editor.FontAttributesProperty.PropertyName)
@@ -153,6 +155,25 @@ namespace Xamarin.Forms.Platform.Android
 			if (keyboard == Keyboard.Numeric)
 			{
 				edit.KeyListener = GetDigitsKeyListener(edit.InputType);
+			}
+
+			if (model.IsSet(InputView.AutoCapitalizationProperty))
+			{
+				var autoCap = (AutoCapitalization)model.GetValue(InputView.AutoCapitalizationProperty);
+
+				switch (autoCap)
+				{
+					case AutoCapitalization.Characters:
+						Control.InputType = Control.InputType | InputTypes.TextFlagCapCharacters;
+						break;
+					case AutoCapitalization.Sentences:
+						Control.InputType = Control.InputType | InputTypes.TextFlagCapSentences;
+						break;
+					case AutoCapitalization.Words:
+						Control.InputType = Control.InputType | InputTypes.TextFlagCapWords;
+						break;
+
+				}
 			}
 		}
 

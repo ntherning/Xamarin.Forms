@@ -68,6 +68,7 @@ namespace Xamarin.Forms.Platform.iOS
 			UpdateKeyboard();
 			UpdateEditable();
 			UpdateTextAlignment();
+			UpdateAutoCapitalization();
 		}
 
 		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -78,6 +79,8 @@ namespace Xamarin.Forms.Platform.iOS
 				UpdateText();
 			else if (e.PropertyName == Xamarin.Forms.InputView.KeyboardProperty.PropertyName)
 				UpdateKeyboard();
+			else if (e.PropertyName == Xamarin.Forms.InputView.AutoCapitalizationProperty.PropertyName)
+				UpdateAutoCapitalization();
 			else if (e.PropertyName == VisualElement.IsEnabledProperty.PropertyName)
 				UpdateEditable();
 			else if (e.PropertyName == Editor.TextColorProperty.PropertyName)
@@ -90,6 +93,31 @@ namespace Xamarin.Forms.Platform.iOS
 				UpdateFont();
 			else if (e.PropertyName == VisualElement.FlowDirectionProperty.PropertyName)
 				UpdateTextAlignment();
+		}
+
+		void UpdateAutoCapitalization()
+		{
+			if (Element.IsSet(Xamarin.Forms.InputView.AutoCapitalizationProperty))
+			{
+				var autoCap = (AutoCapitalization)Element.GetValue(Xamarin.Forms.InputView.AutoCapitalizationProperty);
+
+				switch (autoCap)
+				{
+					case AutoCapitalization.Characters:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.AllCharacters;
+						break;
+					case AutoCapitalization.Sentences:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.Sentences;
+						break;
+					case AutoCapitalization.Words:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.Words;
+						break;
+					case AutoCapitalization.None:
+						Control.AutocapitalizationType = UITextAutocapitalizationType.None;
+						break;
+
+				}
+			}
 		}
 
 		void HandleChanged(object sender, EventArgs e)
